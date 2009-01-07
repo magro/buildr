@@ -83,11 +83,14 @@ module Buildr
             fullname = File.expand_path(fname, path)
             
             if fname =~ /^(.+)\.clj$/
-              unless done.include?(ns.join('.') + '.' + $1)
-                dest_dir = target + File::SEPARATOR + ns.join(File::SEPARATOR)
+              fullns = if ns.size > 0 then ns.join('.') + '.' else '' end + $1
+              
+              trace "#{fullns} included in done [ #{done.join ', '} ]: #{done.include? fullns}"
+              
+              unless done.include? fullns
+                dest_dir = target + if ns.size > 0 then File::SEPARATOR + ns.join(File::SEPARATOR) else '' end
                 
                 mkdir dest_dir unless File.exists? dest_dir
-                
                 cp fullname, dest_dir + File::SEPARATOR + fname
               end
             elsif File.directory? fullname

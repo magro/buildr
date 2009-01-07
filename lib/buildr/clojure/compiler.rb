@@ -19,16 +19,13 @@ module Buildr
       specify :language => :clojure, :sources => :clojure, :source_ext => :clj,
               :target => 'classes', :target_ext => 'class', :packaging => :jar
       
-      def initialize(project, options)
-        super
-        
-        options[:libs] ||= []
-      end
-      
       def compile(sources, target, dependencies) #:nodoc:
         check_options options, OPTIONS
         
         source_paths = sources.select { |source| File.directory?(source) }
+        
+        options[:libs] ||= source_paths.map { |path| detect_namespaces(path, []) }
+        
         cp = dependencies + source_paths + [
           File.expand_path('clojure.jar', Cljc.clojure_home)
         ]
@@ -60,6 +57,24 @@ module Buildr
           task(t).invoke
           File.expand_path t
         end
+      end
+      
+      def detect_namespaces(path, ns)
+        back = []
+        
+        Dir.foreach path do |fname|
+          unless fname == '.' or fname == '..'
+            fullname = File.expand_path(fname, path)
+            
+            if fname =~ /^(.+)\.clj$/
+              back << (ns + [$1]).join('.')
+            elsif File.directory? fullname
+              back << detect_namespaces(fullname, ns + [fname])
+            end
+          end
+        end
+        
+        back
       end
       
       def copy_remainder(path, target, ns, done)

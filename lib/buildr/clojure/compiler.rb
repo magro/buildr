@@ -17,7 +17,7 @@ module Buildr
       OPTIONS = [:libs]
       
       specify :language => :clojure, :sources => :clojure, :source_ext => :clj,
-              :target => 'classes', :target_ext => 'clj', :packaging => :jar
+              :target => 'classes', :target_ext => 'class', :packaging => :jar
       
       def initialize(project, options)
         super
@@ -47,6 +47,10 @@ module Buildr
         cmd = 'java ' + cmd_args.join(' ')
         trace cmd
         system cmd
+        
+        source_paths.each do |path|
+          copy_remainder(path, File.expand_path(target), [], options[:libs])
+        end
       end
       
     private
@@ -55,6 +59,26 @@ module Buildr
         Buildr.artifacts(cp.map(&:to_s)).map do |t| 
           task(t).invoke
           File.expand_path t
+        end
+      end
+      
+      def copy_remainder(path, target, ns, done)
+        Dir.foreach path do |fname|
+          unless fname == '.' or fname == '..'
+            fullname = File.expand_path(fname, path)
+            
+            if fname =~ /^(.+)\.clj$/
+              unless done.include?(ns.join('.') + '.' + $1)
+                dest_dir = target + File::SEPARATOR + ns.join(File::SEPARATOR)
+                
+                mkdir dest_dir unless File.exists? dest_dir
+                
+                cp fullname, dest_dir + File::SEPARATOR + fname
+              end
+            elsif File.directory? fullname
+              copy_remainder(fullname, target, ns + [fname], done)
+            end
+          end
         end
       end
     end

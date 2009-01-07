@@ -22,6 +22,8 @@ module Buildr
       def compile(sources, target, dependencies) #:nodoc:
         check_options options, OPTIONS
         
+        fail 'Are we forgetting something? CLOJURE_HOME not set.' unless Cljc.clojure_home
+        
         source_paths = sources.select { |source| File.directory?(source) }
         
         options[:libs] ||= source_paths.map { |path| detect_namespaces(path, []) }

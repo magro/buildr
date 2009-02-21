@@ -26,7 +26,7 @@ module Buildr
         
         source_paths = sources.select { |source| File.directory?(source) }
         
-        options[:libs] ||= source_paths.map { |path| detect_namespaces(path, []) }
+        options[:libs] ||= source_paths.map { |path| detect_namespaces(path, []) }.flatten
         
         cp = dependencies + source_paths + [
           File.expand_path('clojure.jar', Cljc.clojure_home)
@@ -86,8 +86,6 @@ module Buildr
             
             if fname =~ /^(.+)\.clj$/
               fullns = if ns.size > 0 then ns.join('.') + '.' else '' end + $1
-              
-              trace "#{fullns} included in done [ #{done.join ', '} ]: #{done.include? fullns}"
               
               unless done.include? fullns
                 dest_dir = target + if ns.size > 0 then File::SEPARATOR + ns.join(File::SEPARATOR) else '' end

@@ -38,14 +38,24 @@ module Buildr
           '-classpath', "'#{cp_str}'",
           "-Dclojure.compile.path='#{File.expand_path(target)}'",
           'clojure.lang.Compile'
-        ] + options[:libs]
+        ]
         
         trace "Target: #{target}"
         trace "Sources: [ #{sources.join ', '} ]"
         
-        cmd = 'java ' + cmd_args.join(' ')
-        trace cmd
-        system cmd
+        options[:libs].each do |ns|
+          src = ns.gsub('.', '/')
+          source_paths.each do |s_path|
+            orig = File.expand_path(src + '.clj', s_path)
+            if File.exists? orig
+              file File.expand_path(src + '__init.class', target) => orig do
+                cmd = 'java ' + cmd_args.join(' ') + " #{ns}"
+                trace cmd
+                system cmd
+              end.invoke
+            end
+          end
+        end
         
         source_paths.each do |path|
           copy_remainder(path, File.expand_path(target), [], options[:libs])

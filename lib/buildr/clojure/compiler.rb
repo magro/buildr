@@ -45,9 +45,15 @@ module Buildr
         
         options[:libs].each do |ns|
           src = ns.gsub('.', '/')
+          found = false
+          
           source_paths.each do |s_path|
             orig = File.expand_path(src + '.clj', s_path)
+            
             if File.exists? orig
+              fail "Found duplicate namespace across multiple source dirs: #{ns}" if found
+              found = true
+              
               file File.expand_path(src + '__init.class', target) => orig do
                 cmd = 'java ' + cmd_args.join(' ') + " #{ns}"
                 trace cmd

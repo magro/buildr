@@ -54,6 +54,7 @@ module Buildr
               fail "Found duplicate namespace across multiple source dirs: #{ns}" if found
               found = true
               
+              # I would like to run this all in the same VM, but RJB isn't cooperating
               file File.expand_path(src + '__init.class', target) => orig do
                 cmd = 'java ' + cmd_args.join(' ') + " #{ns}"
                 trace cmd

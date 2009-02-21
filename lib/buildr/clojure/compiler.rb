@@ -90,8 +90,10 @@ module Buildr
               unless done.include? fullns
                 dest_dir = target + if ns.size > 0 then File::SEPARATOR + ns.join(File::SEPARATOR) else '' end
                 
-                mkdir dest_dir unless File.exists? dest_dir
-                cp fullname, dest_dir + File::SEPARATOR + fname
+                file dest_dir + File::SEPARATOR + fname => fullname do
+                  mkdir dest_dir unless File.exists? dest_dir
+                  cp fullname, dest_dir + File::SEPARATOR + fname
+                end.invoke
               end
             elsif File.directory? fullname
               copy_remainder(fullname, target, ns + [fname], done)

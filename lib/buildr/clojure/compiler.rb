@@ -14,10 +14,20 @@ module Buildr
         end
       end
       
-      OPTIONS = [:libs]
+      OPTIONS = [:libs, :scalac, :groovyc, :javac]
       
-      specify :language => :clojure, :sources => :clojure, :source_ext => :clj,
-              :target => 'classes', :target_ext => 'class', :packaging => :jar
+      specify :language => :clojure, :sources => [:clojure, :java, :scala, :groovy],
+              :source_ext => [:clj, :java, :scala, :groovy], :target => 'classes',
+              :target_ext => 'class', :packaging => :jar
+              
+      def initialize(project, options)
+        super
+        options[:javac] ||= {}
+        options[:scalac] ||= {}
+        options[:groovyc] ||= {}
+        
+        @project = project
+      end
       
       def compile(sources, target, dependencies) #:nodoc:
         check_options options, OPTIONS
@@ -70,10 +80,45 @@ module Buildr
         source_paths.each do |path|
           copy_remainder(path, File.expand_path(target), [], options[:libs])
         end
+        
+        if scala_applies? sources
+          require 'buildr/scala'
+          
+          trace 'Compiling mixed Clojure/Scala/Java sources'
+          
+          @scalac = Buildr::Scala::Scalac.new(@project, options[:scalac])
+          @scalac.compile(sources, target, cp)
+        elsif groovy_applies? sources
+          require 'buildr/groovy'
+          
+          trace 'Compiling mixed Clojure/Groovy/Java sources'
+          
+          @groovyc = Buildr::Groovy::Groovyc.new(@project, options[:groovyc])
+          @groovyc.compile(sources, target, cp)
+        elsif java_applies? sources
+          trace 'Compiling mixed Clojure/Java sources'
+          
+          @javac = Buildr::Compiler::Javac.new(@project, options[:javac])
+          @javac.compile(sources, target, cp)
+        end
       end
       
     private
-    
+      def scala_applies?(sources)
+        not sources.flatten.map { |source| File.directory?(source) ? FileList["#{source}/**/*.scala"] : source }.
+          flatten.reject { |file| File.directory?(file) }.map { |file| File.expand_path(file) }.uniq.empty?
+      end
+      
+      def groovy_applies?(sources)
+        not sources.flatten.map { |source| File.directory?(source) ? FileList["#{source}/**/*.groovy"] : source }.
+          flatten.reject { |file| File.directory?(file) }.map { |file| File.expand_path(file) }.uniq.empty?
+      end
+      
+      def java_applies?(sources)
+        not sources.flatten.map { |source| File.directory?(source) ? FileList["#{source}/**/*.java"] : source }.
+          flatten.reject { |file| File.directory?(file) }.map { |file| File.expand_path(file) }.uniq.empty?
+      end
+      
       def inner_classpath_from(cp)
         Buildr.artifacts(cp.map(&:to_s)).map do |t| 
           task(t).invoke

@@ -42,8 +42,13 @@ module Buildr
         
         trace "Target: #{target}"
         trace "Sources: [ #{sources.join ', '} ]"
+          
+        task :cljc do
+          cmd = 'java ' + cmd_args.join(' ')
+          trace cmd
+          system cmd or fail 'Failed to compile. See errors above.'
+        end
         
-        recompiled = false
         options[:libs].each do |ns|
           src = ns.gsub('.', '/')
           found = false
@@ -55,15 +60,8 @@ module Buildr
               fail "Found duplicate namespace across multiple source dirs: #{ns}" if found
               found = true
               
-              # I would like to run this all in the same VM, but RJB isn't cooperating
               file File.expand_path(src + '__init.class', target) => orig do
-                unless recompiled
-                  recompiled = true
-                  
-                  cmd = 'java ' + cmd_args.join(' ')
-                  trace cmd
-                  system cmd or fail 'Failed to compile. See errors above.'
-                end
+                task(:cljc).invoke
               end.invoke
             end
           end

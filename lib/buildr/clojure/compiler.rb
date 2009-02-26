@@ -38,11 +38,12 @@ module Buildr
           '-classpath', "'#{cp_str}'",
           "-Dclojure.compile.path='#{File.expand_path(target)}'",
           'clojure.lang.Compile'
-        ]
+        ] + options[:libs]
         
         trace "Target: #{target}"
         trace "Sources: [ #{sources.join ', '} ]"
         
+        recompiled = false
         options[:libs].each do |ns|
           src = ns.gsub('.', '/')
           found = false
@@ -56,9 +57,13 @@ module Buildr
               
               # I would like to run this all in the same VM, but RJB isn't cooperating
               file File.expand_path(src + '__init.class', target) => orig do
-                cmd = 'java ' + cmd_args.join(' ') + " #{ns}"
-                trace cmd
-                system cmd
+                unless recompiled
+                  recompiled = true
+                  
+                  cmd = 'java ' + cmd_args.join(' ')
+                  trace cmd
+                  system cmd
+                end
               end.invoke
             end
           end

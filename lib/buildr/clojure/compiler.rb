@@ -62,7 +62,7 @@ module Buildr
                   
                   cmd = 'java ' + cmd_args.join(' ')
                   trace cmd
-                  system cmd
+                  system cmd or fail 'Failed to compile. See errors above.'
                 end
               end.invoke
             end

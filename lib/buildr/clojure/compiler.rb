@@ -127,4 +127,4 @@ module Buildr
   end
 end
 
-Buildr::Compiler.compilers << Buildr::Clojure::Cljc
+Buildr::Compiler.compilers.unshift Buildr::Clojure::Cljc

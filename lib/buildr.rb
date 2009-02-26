@@ -20,8 +20,8 @@ end
 require 'buildr/core'
 require 'buildr/packaging'
 require 'buildr/java'
-require 'buildr/clojure'
 require 'buildr/scala'
+require 'buildr/clojure'
 require 'buildr/ide'
 
 # Methods defined in Buildr are both instance methods (e.g. when included in Project)

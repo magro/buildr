@@ -84,7 +84,7 @@ module Buildr
       
       class << self
         def lang
-          :none
+          :clojure
         end
         
         def to_sym

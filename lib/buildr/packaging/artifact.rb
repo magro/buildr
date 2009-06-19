@@ -498,7 +498,8 @@ module Buildr
     #     - http://elsewhere.com/repo
     def remote
       unless @remote
-        @remote = [Buildr.settings.user, Buildr.settings.build].inject([]) { |repos, hash|
+        def_repos = ['http://repo1.maven.org/maven2']
+        @remote = [Buildr.settings.user, Buildr.settings.build].inject(def_repos) { |repos, hash|
           repos | Array(hash['repositories'] && hash['repositories']['remote'])
         }
       end

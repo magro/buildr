@@ -1,3 +1,8 @@
+require 'buildr/core/common'
+require 'buildr/core/project'
+require 'buildr/core/build'
+require 'buildr/core/compile'
+
 module Buildr
   module CC
     include Extension

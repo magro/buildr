@@ -101,7 +101,7 @@ module Buildr
     end
     
     class CCOptions
-      attr_writer :frequency
+      attr_writer :frequency      # TODO  this is a bad name, maybe "delay"?
       
       def frequency
         @frequency ||= 0.2

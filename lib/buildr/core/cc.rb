@@ -32,7 +32,8 @@ module Buildr
         res = project.resources.sources.map(&:to_s)
         ext = Buildr::Compiler.select(project.compile.compiler).source_ext.map(&:to_s)
         
-        pattern = "{{#{dirs.join ','}}/**/*.{#{ext.join ','}},{#{res.join ','}}/**/*}"
+        res_tail = if res.empty? then '' else ",{#{res.join ','}}/**/*" end
+        pattern = "{{#{dirs.join ','}}/**/*.{#{ext.join ','}}#{res_tail}}"
         
         times, _ = Buildr::CC.check_mtime pattern, {}     # establish baseline
         

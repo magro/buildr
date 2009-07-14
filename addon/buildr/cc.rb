@@ -30,7 +30,11 @@ module Buildr
         ext = Buildr::Compiler.select(project.compile.compiler).source_ext.map(&:to_s)
         times, _ = Buildr::CC.check_mtime dirs, ext, {}     # establish baseline
         
-        info "Monitoring directories: [#{dirs.join ', '}]"
+        if dirs.length == 1
+          info "Monitoring directory: #{dirs.first}"
+        else
+          info "Monitoring directories: [#{dirs.join ', '}]"
+        end
         trace "Monitoring extensions: [#{ext.join ', '}]"
         
         while true
@@ -38,6 +42,8 @@ module Buildr
           
           times, changed = Buildr::CC.check_mtime dirs, ext, times
           unless changed.empty?
+            info ''    # better spacing
+            
             changed.each do |file|
               info "Detected changes in #{file}"
             end

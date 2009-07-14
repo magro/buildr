@@ -27,10 +27,11 @@ module Buildr
     before_define do |project|
       project.task :cc => :compile do
         dirs = project.compile.sources.map(&:to_s)
-        ext = [:scala].map(&:to_s)               # TODO
+        ext = Buildr::Compiler.select(project.compile.compiler).source_ext.map(&:to_s)
         times, _ = Buildr::CC.check_mtime dirs, ext, {}     # establish baseline
         
         info "Monitoring directories: [#{dirs.join ', '}]"
+        trace "Monitoring extensions: [#{ext.join ', '}]"
         
         while true
           sleep 0.2

@@ -71,14 +71,25 @@ module Buildr
               info "Detected changes in #{Buildr::CC.strip_filename project, file}"
             end
             
+            in_main = main_dirs.any? do |dir|
+              changed.any? { |file| file.index(dir) == 0 }
+            end
+            
+            in_test = test_dirs.any? do |dir|
+              changed.any? { |file| file.index(dir) == 0 }
+            end
+            
+            in_res = res_dirs.any? do |dir|
+              changed.any? { |file| file.index(dir) == 0 }
+            end
+            
             # TODO  for some reason, resources task doesn't run like this
-            project.task(:resources).reenable
+            project.task(:resources).reenable if in_res
+            project.task(:compile).reenable if in_main
+            project.task('test:compile').reenable if in_test
+            
             project.task(:resources).invoke
-            
-            project.task(:compile).reenable
             project.task(:compile).invoke
-            
-            project.task('test:compile').reenable
             project.task('test:compile').invoke
           end
         end

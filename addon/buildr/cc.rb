@@ -18,6 +18,10 @@ module Buildr
         
         [times, changed]
       end
+      
+      def strip_filename(project, name)
+        name.gsub project.base_dir + File::SEPARATOR, ''
+      end
     end
     
     first_time do
@@ -30,10 +34,11 @@ module Buildr
         ext = Buildr::Compiler.select(project.compile.compiler).source_ext.map(&:to_s)
         times, _ = Buildr::CC.check_mtime dirs, ext, {}     # establish baseline
         
+        dir_names = dirs.map { |file| Buildr::CC.strip_filename project, file }
         if dirs.length == 1
-          info "Monitoring directory: #{dirs.first}"
+          info "Monitoring directory: #{dir_names.first}"
         else
-          info "Monitoring directories: [#{dirs.join ', '}]"
+          info "Monitoring directories: [#{dir_names.join ', '}]"
         end
         trace "Monitoring extensions: [#{ext.join ', '}]"
         
@@ -45,7 +50,7 @@ module Buildr
             info ''    # better spacing
             
             changed.each do |file|
-              info "Detected changes in #{file}"
+              info "Detected changes in #{Buildr::CC.strip_filename project, file}"
             end
             
             project.task(:compile).reenable

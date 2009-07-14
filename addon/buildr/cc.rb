@@ -42,6 +42,7 @@ module Buildr
               info "Detected changes in #{file}"
             end
             
+            project.task(:compile).reenable
             project.task(:compile).invoke
           end
         end

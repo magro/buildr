@@ -37,7 +37,10 @@ module Buildr
           
           times, changed = Buildr::CC.check_mtime dirs, ext, times
           unless changed.empty?
-            info "Detected changes: [#{changed.join ', '}]"
+            changed.each do |file|
+              info "Detected changes in #{file}"
+            end
+            
             project.task(:compile).invoke
           end
         end

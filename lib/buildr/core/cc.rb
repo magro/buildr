@@ -4,14 +4,19 @@ module Buildr
     
     class << self
       def check_mtime(pattern, old_times)
-        times = old_times
+        times = {}
         changed = []
         
         Dir.glob pattern do |fname|
+          times[fname] = File.mtime fname
           if old_times[fname].nil? || old_times[fname] < File.mtime(fname)
-            times[fname] = File.mtime fname
             changed << fname
           end
+        end
+        
+        # detect deletion (slower than it could be)
+        old_times.each_key do |fname|
+          changed << fname unless times.has_key? fname
         end
         
         [times, changed]

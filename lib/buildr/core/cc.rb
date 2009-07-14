@@ -71,6 +71,7 @@ module Buildr
               info "Detected changes in #{Buildr::CC.strip_filename project, file}"
             end
             
+            # TODO  for some reason, resources task doesn't run like this
             project.task(:resources).reenable
             project.task(:resources).invoke
             

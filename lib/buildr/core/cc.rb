@@ -37,23 +37,28 @@ module Buildr
     end
     
     before_define do |project|
-      project.task :cc => :compile do
-        dirs = project.compile.sources.map(&:to_s)
-        res = project.resources.sources.map(&:to_s)
-        ext = Buildr::Compiler.select(project.compile.compiler).source_ext.map(&:to_s)
+      project.task :cc => [:compile, 'test:compile'] do
+        main_dirs = project.compile.sources.map(&:to_s)
+        test_dirs = project.task('test:compile').sources.map(&:to_s)
+        res_dirs = project.resources.sources.map(&:to_s)
         
-        res_tail = if res.empty? then '' else ",{#{res.join ','}}/**/*" end
-        pattern = "{{#{dirs.join ','}}/**/*.{#{ext.join ','}}#{res_tail}}"
+        main_ext = Buildr::Compiler.select(project.compile.compiler).source_ext.map(&:to_s)
+        test_ext = Buildr::Compiler.select(project.task('test:compile').compiler).source_ext.map(&:to_s)
+        
+        test_tail = if test_dirs.empty? then '' else ",{#{test_dirs.join ','}}/**/*.{#{test_ext.join ','}}" end
+        res_tail = if res_dirs.empty? then '' else ",{#{res_dirs.join ','}}/**/*" end
+        
+        pattern = "{{#{main_dirs.join ','}}/**/*.{#{main_ext.join ','}}#{test_tail}#{res_tail}}"
         
         times, _ = Buildr::CC.check_mtime pattern, {}     # establish baseline
         
-        dir_names = (dirs + res).map { |file| Buildr::CC.strip_filename project, file }
-        if dirs.length == 1
+        dir_names = (main_dirs + test_dirs + res_dirs).map { |file| Buildr::CC.strip_filename project, file }
+        if dir_names.length == 1
           info "Monitoring directory: #{dir_names.first}"
         else
           info "Monitoring directories: [#{dir_names.join ', '}]"
         end
-        trace "Monitoring extensions: [#{ext.join ', '}]"
+        trace "Monitoring extensions: [#{main_ext.join ', '}]"
         
         while true
           sleep project.cc.frequency
@@ -71,6 +76,9 @@ module Buildr
             
             project.task(:compile).reenable
             project.task(:compile).invoke
+            
+            project.task('test:compile').reenable
+            project.task('test:compile').invoke
           end
         end
       end

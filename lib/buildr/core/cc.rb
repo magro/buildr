@@ -3,16 +3,14 @@ module Buildr
     include Extension
     
     class << self
-      def check_mtime(dirs, ext, old_times)
+      def check_mtime(pattern, old_times)
         times = old_times
         changed = []
         
-        dirs.each do |dir|
-          Dir.glob "#{dir}/**/*.{#{ext.join ','}}" do |fname|
-            if old_times[fname].nil? || old_times[fname] < File.mtime(fname)
-              times[fname] = File.mtime fname
-              changed << fname
-            end
+        Dir.glob pattern do |fname|
+          if old_times[fname].nil? || old_times[fname] < File.mtime(fname)
+            times[fname] = File.mtime fname
+            changed << fname
           end
         end
         
@@ -31,10 +29,14 @@ module Buildr
     before_define do |project|
       project.task :cc => :compile do
         dirs = project.compile.sources.map(&:to_s)
+        res = project.resources.sources.map(&:to_s)
         ext = Buildr::Compiler.select(project.compile.compiler).source_ext.map(&:to_s)
-        times, _ = Buildr::CC.check_mtime dirs, ext, {}     # establish baseline
         
-        dir_names = dirs.map { |file| Buildr::CC.strip_filename project, file }
+        pattern = "{{#{dirs.join ','}}/**/*.{#{ext.join ','}},{#{res.join ','}}/**/*}"
+        
+        times, _ = Buildr::CC.check_mtime pattern, {}     # establish baseline
+        
+        dir_names = (dirs + res).map { |file| Buildr::CC.strip_filename project, file }
         if dirs.length == 1
           info "Monitoring directory: #{dir_names.first}"
         else
@@ -45,13 +47,16 @@ module Buildr
         while true
           sleep project.cc.frequency
           
-          times, changed = Buildr::CC.check_mtime dirs, ext, times
+          times, changed = Buildr::CC.check_mtime pattern, times
           unless changed.empty?
             info ''    # better spacing
             
             changed.each do |file|
               info "Detected changes in #{Buildr::CC.strip_filename project, file}"
             end
+            
+            project.task(:resources).reenable
+            project.task(:resources).invoke
             
             project.task(:compile).reenable
             project.task(:compile).invoke

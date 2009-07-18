@@ -18,7 +18,7 @@ define 'killer-app'
 
 h3. Compilation
 
-Of course, this isn't really giving Buildr much information.  What it can't learn from the buildfile, Buildr will learn by inspecting your directory structure.  Java sources are expected to exist within the @src/main/java/@ directory.  If Buildr finds these sources, it will automatically configure the compilation to source that directory, depositing the compilation results in the @target/classes/@ directory (all under the project root of course).  We can run this compilation using the following command:
+Of course, this isn't really giving Buildr much information.  What it can't learn from the buildfile, Buildr will learn by inspecting your directory structure.  Java sources are expected to exist within the @src/main/java/@ directory. If Buildr finds these sources, it will automatically configure the compilation to source that directory, depositing the compilation results in the @target/classes/@ directory (all under the project root of course).  We can run this compilation using the following command:
 
 {% highlight sh %}
 $ buildr compile

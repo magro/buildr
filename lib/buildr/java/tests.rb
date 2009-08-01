@@ -274,6 +274,7 @@ module Buildr
   #   test.using :testng
   #
   # Support the following options:
+  # * :args -- Array of arguments passed to the test suite.
   # * :properties -- Hash of properties passed to the test suite.
   # * :java_args -- Arguments passed to the JVM.
   class TestNG < TestFramework::Java
@@ -306,10 +307,14 @@ module Buildr
     def run(tests, dependencies) #:nodoc:
       cmd_args = [ 'org.testng.TestNG', '-log', '2', '-sourcedir', task.compile.sources.join(';'), '-suitename', task.project.id ]
       cmd_args << '-d' << task.report_to.to_s
+      cmd_args.concat(options[:args] || [])
       # run all tests in the same suite
       cmd_args << '-testclass' << tests
       cmd_options = { :properties=>options[:properties], :java_args=>options[:java_args],
         :classpath=>dependencies, :name => "TestNG in #{task.send(:project).name}" }
+        
+      puts "tests.rb creating report + project dir..."
+      mkdir_p File.join(task.report_to.to_s, task.project.id)
 
       begin
         Java::Commands.java cmd_args, cmd_options
